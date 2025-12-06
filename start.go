@@ -59,6 +59,10 @@ func main() {
 	if err = QueryCars(context.Background(), a8m); err != nil {
 		log.Fatalf("failed to query cars: %v", err)
 	}
+
+	if err = QueryCarUsers(context.Background(), a8m); err != nil {
+		log.Fatalf("failed to query car users: %v", err)
+	}
 }
 
 // Open new connection
@@ -152,5 +156,21 @@ func QueryCars(ctx context.Context, a8m *ent.User) error {
 		return fmt.Errorf("failed querying user cars: %w", err)
 	}
 	log.Println(ford)
+	return nil
+}
+
+func QueryCarUsers(ctx context.Context, a8m *ent.User) error {
+	cars, err := a8m.QueryCars().All(ctx)
+	if err != nil {
+		return fmt.Errorf("failed querying user cars: %w", err)
+	}
+	// Query the inverse edge.
+	for _, c := range cars {
+		owner, err := c.QueryOwner().Only(ctx)
+		if err != nil {
+			return fmt.Errorf("failed querying car %q owner: %w", c.Model, err)
+		}
+		log.Printf("car %q owner: %q\n", c.Model, owner.Name)
+	}
 	return nil
 }
