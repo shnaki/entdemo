@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"entdemo/ent/car"
+	"entdemo/ent/user"
 	"errors"
 	"fmt"
 	"time"
@@ -30,6 +31,25 @@ func (_c *CarCreate) SetModel(v string) *CarCreate {
 func (_c *CarCreate) SetRegisteredAt(v time.Time) *CarCreate {
 	_c.mutation.SetRegisteredAt(v)
 	return _c
+}
+
+// SetOwnerID sets the "owner" edge to the User entity by ID.
+func (_c *CarCreate) SetOwnerID(id int) *CarCreate {
+	_c.mutation.SetOwnerID(id)
+	return _c
+}
+
+// SetNillableOwnerID sets the "owner" edge to the User entity by ID if the given value is not nil.
+func (_c *CarCreate) SetNillableOwnerID(id *int) *CarCreate {
+	if id != nil {
+		_c = _c.SetOwnerID(*id)
+	}
+	return _c
+}
+
+// SetOwner sets the "owner" edge to the User entity.
+func (_c *CarCreate) SetOwner(v *User) *CarCreate {
+	return _c.SetOwnerID(v.ID)
 }
 
 // Mutation returns the CarMutation object of the builder.
@@ -105,6 +125,23 @@ func (_c *CarCreate) createSpec() (*Car, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.RegisteredAt(); ok {
 		_spec.SetField(car.FieldRegisteredAt, field.TypeTime, value)
 		_node.RegisteredAt = value
+	}
+	if nodes := _c.mutation.OwnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   car.OwnerTable,
+			Columns: []string{car.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_cars = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }
