@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"entdemo/ent/car"
 	"entdemo/ent/user"
 	"errors"
 	"fmt"
@@ -37,6 +38,21 @@ func (_c *UserCreate) SetNillableName(v *string) *UserCreate {
 		_c.SetName(*v)
 	}
 	return _c
+}
+
+// AddCarIDs adds the "cars" edge to the Car entity by IDs.
+func (_c *UserCreate) AddCarIDs(ids ...int) *UserCreate {
+	_c.mutation.AddCarIDs(ids...)
+	return _c
+}
+
+// AddCars adds the "cars" edges to the Car entity.
+func (_c *UserCreate) AddCars(v ...*Car) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCarIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -126,6 +142,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(user.FieldName, field.TypeString, value)
 		_node.Name = value
+	}
+	if nodes := _c.mutation.CarsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CarsTable,
+			Columns: []string{user.CarsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(car.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }
