@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"entdemo/ent/car"
 	"entdemo/ent/user"
 	"fmt"
 	"log"
@@ -50,10 +51,14 @@ func main() {
 	//	log.Fatalf("failed to query user: %v", err)
 	//}
 
-	//_, err = CreateCars(context.Background(), client)
-	//if err != nil {
-	//	log.Fatalf("failed to create cars: %v", err)
-	//}
+	a8m, err := CreateCars(context.Background(), client)
+	if err != nil {
+		log.Fatalf("failed to create cars: %v", err)
+	}
+
+	if err = QueryCars(context.Background(), a8m); err != nil {
+		log.Fatalf("failed to query cars: %v", err)
+	}
 }
 
 // Open new connection
@@ -130,4 +135,22 @@ func CreateCars(ctx context.Context, client *ent.Client) (*ent.User, error) {
 	}
 	log.Println("user was created: ", a8m)
 	return a8m, nil
+}
+
+func QueryCars(ctx context.Context, a8m *ent.User) error {
+	cars, err := a8m.QueryCars().All(ctx)
+	if err != nil {
+		return fmt.Errorf("failed querying user cars: %w", err)
+	}
+	log.Println("returned cars:", cars)
+
+	// What about filtering specific cars.
+	ford, err := a8m.QueryCars().
+		Where(car.Model("Ford")).
+		Only(ctx)
+	if err != nil {
+		return fmt.Errorf("failed querying user cars: %w", err)
+	}
+	log.Println(ford)
+	return nil
 }
