@@ -17,8 +17,29 @@ type Group struct {
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
 	// Name holds the value of the "name" field.
-	Name         string `json:"name,omitempty"`
+	Name string `json:"name,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the GroupQuery when eager-loading is set.
+	Edges        GroupEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// GroupEdges holds the relations/edges for other nodes in the graph.
+type GroupEdges struct {
+	// Users holds the value of the users edge.
+	Users []*User `json:"users,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// UsersOrErr returns the Users value or an error if the edge
+// was not loaded in eager-loading.
+func (e GroupEdges) UsersOrErr() ([]*User, error) {
+	if e.loadedTypes[0] {
+		return e.Users, nil
+	}
+	return nil, &NotLoadedError{edge: "users"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -68,6 +89,11 @@ func (_m *Group) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *Group) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
+}
+
+// QueryUsers queries the "users" edge of the Group entity.
+func (_m *Group) QueryUsers() *UserQuery {
+	return NewGroupClient(_m.config).QueryUsers(_m)
 }
 
 // Update returns a builder for updating this Group.

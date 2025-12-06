@@ -30,9 +30,11 @@ type User struct {
 type UserEdges struct {
 	// Cars holds the value of the cars edge.
 	Cars []*Car `json:"cars,omitempty"`
+	// Groups holds the value of the groups edge.
+	Groups []*Group `json:"groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // CarsOrErr returns the Cars value or an error if the edge
@@ -42,6 +44,15 @@ func (e UserEdges) CarsOrErr() ([]*Car, error) {
 		return e.Cars, nil
 	}
 	return nil, &NotLoadedError{edge: "cars"}
+}
+
+// GroupsOrErr returns the Groups value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) GroupsOrErr() ([]*Group, error) {
+	if e.loadedTypes[1] {
+		return e.Groups, nil
+	}
+	return nil, &NotLoadedError{edge: "groups"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -102,6 +113,11 @@ func (_m *User) Value(name string) (ent.Value, error) {
 // QueryCars queries the "cars" edge of the User entity.
 func (_m *User) QueryCars() *CarQuery {
 	return NewUserClient(_m.config).QueryCars(_m)
+}
+
+// QueryGroups queries the "groups" edge of the User entity.
+func (_m *User) QueryGroups() *GroupQuery {
+	return NewUserClient(_m.config).QueryGroups(_m)
 }
 
 // Update returns a builder for updating this User.
