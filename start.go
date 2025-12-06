@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"entdemo/ent/user"
 	"fmt"
 	"log"
 	"os"
@@ -37,6 +38,16 @@ func main() {
 	if err := client.Schema.Create(context.Background()); err != nil {
 		log.Fatalf("failed creating schema resources: %v", err)
 	}
+
+	//_, err = CreateUser(context.Background(), client)
+	//if err != nil {
+	//	log.Fatalf("failed to create user: %v", err)
+	//}
+
+	_, err = QueryUser(context.Background(), client)
+	if err != nil {
+		log.Fatalf("failed to query user: %v", err)
+	}
 }
 
 // Open new connection
@@ -49,4 +60,31 @@ func Open(databaseUrl string) (*ent.Client, error) {
 	// Create an ent.Driver from `db`.
 	drv := entsql.OpenDB(dialect.Postgres, db)
 	return ent.NewClient(ent.Driver(drv)), nil
+}
+
+func CreateUser(ctx context.Context, client *ent.Client) (*ent.User, error) {
+	u, err := client.User.
+		Create().
+		SetAge(30).
+		SetName("a8m").
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed creating user: %w", err)
+	}
+	log.Println("user was created: ", u)
+	return u, nil
+}
+
+func QueryUser(ctx context.Context, client *ent.Client) (*ent.User, error) {
+	u, err := client.User.
+		Query().
+		Where(user.Name("a8m")).
+		// `Only` fails if no user found,
+		// or more than 1 user returned.
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed querying user: %w", err)
+	}
+	log.Println("user returned: ", u)
+	return u, nil
 }
