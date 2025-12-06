@@ -1,0 +1,14 @@
+services:
+  dev-postgres:
+    image: postgres:18.1-alpine
+    ports:
+      - 5435:5432
+    environment:
+      POSTGRES_USER: entdemo
+      POSTGRES_PASSWORD: entdemo
+      POSTGRES_DB: entdemo
+    restart: always
+    networks:
+      - entdemo
+networks:
+  entdemo:
